@@ -42,6 +42,16 @@ export async function POST(request: Request) {
       },
     });
 
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        action: "CREATED",
+        message: `${user.name} created project '${name}'`,
+        userId: user.id,
+        projectId: project.id,
+      }
+    });
+
     return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
     console.error('Create project error:', error);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { triggerEvent } from '@/lib/pusher';
 
 export async function GET(request: Request) {
   try {
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
       include: {
         project: { select: { id: true, name: true } },
         assignee: { select: { id: true, name: true } },
+        subtasks: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -49,8 +51,35 @@ export async function POST(request: Request) {
       },
       include: {
         assignee: { select: { id: true, name: true } },
+        subtasks: true,
       }
     });
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        action: "CREATED",
+        message: `${user.name} created task '${title}'`,
+        userId: user.id,
+        projectId,
+      }
+    });
+
+    // If assigned, log assignment too
+    if (assigneeId) {
+      const assignee = await prisma.user.findUnique({ where: { id: assigneeId }, select: { name: true } });
+      await prisma.activityLog.create({
+        data: {
+          action: "ASSIGNED",
+          message: `${user.name} assigned '${title}' to ${assignee?.name || 'someone'}`,
+          userId: user.id,
+          projectId,
+        }
+      });
+    }
+
+    // Trigger real-time event
+    await triggerEvent(`project-${projectId}`, "task-created", { task });
 
     return NextResponse.json({ task }, { status: 201 });
   } catch (error) {
