@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUserFromCookies } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(
   request: Request,
@@ -55,7 +55,7 @@ export async function POST(
       return NextResponse.json({ subtasks: createdSubtasks });
     }
 
-    const genAI = new GoogleGenAI(apiKey as any);
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       generationConfig: { responseMimeType: "application/json" } 

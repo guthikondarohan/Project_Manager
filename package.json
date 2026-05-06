@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@google/genai": "^1.52.0",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
